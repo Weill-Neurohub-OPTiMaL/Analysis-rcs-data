@@ -1,40 +1,55 @@
-%% Function Name: data_fft = rcs_fft_to_pb(data_td, L, interval, fs_td, amp_gain)
+%% Function Name: rcs_fft_to_pb()
 %
-% Description: Converts data in units of mV to the internal unit 
-% representation used on the RC+S device.
+% Description: Converts short-time FFT outputs to scaled Power Band signals 
+% (or full spectrogram) with the same scaling operations performed onboard 
+% the RC+S device.
 %
 % Inputs:
-%     data_td : (num_samples, num_channels) array, or transpose
-%         Data, either time-domain or FFT amplitude, given in units of mV.
-%         If a two dimensional array is given, the result will be returned
-%         in the same shape.
-%     L : int, 
-%         Parameter indicating the channel gain represented by the
-%         cfg_config_data.dev.HT_sns_ampX_gain250_trim value in the
-%         DeviceSettings.json file, or the metaData.ampGains OpenMind
-%         output.
-%     interval : int, 
-%         Parameter indicating the channel gain represented by the
-%         cfg_config_data.dev.HT_sns_ampX_gain250_trim value in the
-%         DeviceSettings.json file, or the metaData.ampGains OpenMind
-%         output.
-%     fs_td : int, 
-%         Parameter indicating the channel gain represented by the
-%         cfg_config_data.dev.HT_sns_ampX_gain250_trim value in the
-%         DeviceSettings.json file, or the metaData.ampGains OpenMind
-%         output.
+%     data_fft : (num_windows, L) array, or transpose
+%         FFT amplitude data given in internal RC+S units. This may also be
+%         given in units of mV (matching the format in FFT data logs) if 
+%         specified by the `input_is_mv` parameter. The result will be 
+%         returned in the same shape.
+%     fs_td : int
+%         The Time-Domain sampling rate, in Hz.
+%     L : int, {64, 256, 1024}
+%         FFT size, in number of samples.
+%     bit_shift : int, 0:7
+%         Parameter indicating the number of most-significant-bits to be
+%         discarded. This value should be input as exactly the same value
+%         programmed on the device.
+%     band_edges : optional (num_bands, 2) array, or transpose, default=[]
+%         Edges of each power band requested. If empty, the function will
+%         return the full L/2-dimensional single-sided spectrogram.
+%     input_is_mv : optional boolean, default=False
+%         Boolean flag indicating whether the FFT input was given in units
+%         of scaled mV, matching the format in the raw data logs.
 %
-% Author: Tanner Chas Dixon, tanner.dixon@ucsf.edu
-% Date: February 3, 2022
+% Outputs:
+%     data_pb : (num_windows, num_bands) array
+%         Power Band data given in internal RC+S units, or the full
+%         L/2-dimensional spectrogram.
+%
+% Author: Tanner Chas Dixon, tanner.dixon@ucsf.edu. Credit to Juan Anso for
+%             earlier version of the code.
+% Date last updated: February 10, 2022
 %---------------------------------------------------------
 
-function data_pb = rcs_fft_to_pb(data_fft, L, fs_td, hann_win, bit_shift)
+function data_pb = rcs_fft_to_pb(data_fft, fs_td, L, bit_shift, ...
+                                 band_edges, input_is_mv)
 
+% Validate function arguments and set defaults
+arguments
+    data_fft {mustBeNumeric}
+    fs_td {mustBeInteger}
+    L {mustBeMember(L,[64,256,1024])} 
+    bit_shift {mustBeMember(bit_shift,0:7)} 
+    band_edges {mustBeNumeric} = []
+    input_is_mv {mustBeNumericOrLogical} = false
+end
 
-
-% normalize by hann_win or L (not sure which is done on device yet)
-% data_fft = data_fft/L;
-% data_fft = data_fft/sum(hann_win);
+% Create a vector containing the center frequencies of all FFT bins
+center_freqs = (0:(L/2-1)) * fs_td/L;
 
 % convert amplitude to power
 data_fft = data_fft.^2;
