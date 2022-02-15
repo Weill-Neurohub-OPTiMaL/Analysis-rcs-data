@@ -1,4 +1,4 @@
-%% Function Name: data_mv = transformRCStoMV(data_rcs, amp_gain)
+%% Function Name: transformRCStoMV()
 %
 % Description: Converts data from the internal unit representation used on 
 % the RC+S device to units of mV.
