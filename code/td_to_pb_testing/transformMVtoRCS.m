@@ -4,7 +4,7 @@
 % representation used on the RC+S device.
 %
 % Inputs:
-%     data_mV : (num_samples, num_channels) array, or transpose
+%     data_mv : (num_samples, num_channels) array, or transpose
 %         Data, either time-domain or FFT amplitude, given in units of mV.
 %         The result will be returned in the same shape.
 %     amp_gain : int, 

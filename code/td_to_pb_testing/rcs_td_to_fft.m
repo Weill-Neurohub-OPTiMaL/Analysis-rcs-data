@@ -68,7 +68,7 @@ switch L
         L_non_zero = 1000;
 end
 
-% Linearly interpolate over NaN-values
+% Linearly interpolate over NaN-values... TO-DO, CONSIDER A DIFFERENT FIX
 nan_mask = isnan(data_td);
 idx = 1:numel(data_td);
 data_td(nan_mask) = interp1(idx(~nan_mask), data_td(~nan_mask), ...

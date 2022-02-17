@@ -56,17 +56,18 @@ end
 data_fft = data_fft.^2;
 data_fft = 64 * data_fft(:,1:L/2) / (L^2); % all scaling collapsed into 64
 % Perform the bit-shift
-data_pb = floor(data_fft/(2^(8-bit_shift)));
+data_pb = floor(data_fft/(2^(8-bit_shift))); % TO-DO: HANDLE OVERFLOW
 
-% Sum over the bins in each power band or return the full spectrum
+% Sum over the bins in each power band or return the full spectrum if none
+% given
 if ~isempty(band_edges_hz)
     % Create a vector containing the center frequencies of all FFT bins
     center_freqs = (0:(L/2-1)) * fs_td/L;
     % For each requested band, sum over the appropriate FFT bins
     data_pb_binned = zeros(size(data_pb,1), size(band_edges_hz,1));
     for band_idx = 1:size(band_edges_hz,1)
-        bin_mask = center_freqs>=band_edges_hz(band_idx,1) ...
-                       & center_freqs<=band_edges_hz(band_idx,2);
+        bin_mask = (center_freqs>=band_edges_hz(band_idx,1)) ...
+                   & (center_freqs<=band_edges_hz(band_idx,2));
         data_pb_binned(:,band_idx) = sum(data_pb(:,bin_mask),2);
     end
     data_pb = data_pb_binned;
