@@ -20,7 +20,7 @@
 %     hann_win : (L,1) array, or transpose
 %         The coefficients of the Hann window applied to Time-Domain data 
 %         prior to computing the FFT.
-%     output_in_mv : optional boolean, default=False
+%     output_in_mv : optional boolean, default=false
 %         Boolean flag indicating whether to match the FFT output units
 %         to what is logged by the device (scaled mV).
 %

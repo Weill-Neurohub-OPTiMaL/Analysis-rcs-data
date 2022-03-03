@@ -20,7 +20,7 @@
 %     band_edges_hz : optional (num_bands, 2) array, default=[]
 %         Edges of each power band requested, in Hz. If empty, the function
 %         will return the full L/2-dimensional single-sided spectrogram.
-%     input_is_mv : optional boolean, default=False
+%     input_is_mv : optional boolean, default=false
 %         Boolean flag indicating whether the FFT input was given in units
 %         of scaled mV, matching the format in the raw data logs.
 %
@@ -55,6 +55,7 @@ end
 % Convert amplitude to single-sided power spectrum
 data_fft = data_fft.^2;
 data_fft = 64 * data_fft(:,1:L/2) / (L^2); % all scaling collapsed into 64
+data_fft(:,1) = data_fft(:,1)/2; % first bin (DC) adjustment
 % Perform the bit-shift
 data_pb = floor(data_fft/(2^(8-bit_shift))); % TO-DO: HANDLE OVERFLOW
 
