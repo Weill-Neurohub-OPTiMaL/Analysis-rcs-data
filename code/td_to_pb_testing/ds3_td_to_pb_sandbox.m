@@ -22,7 +22,7 @@ pb_time = combinedDataTable.DerivedTime(pb_mask);
 data_td_mv = combinedDataTable.TD_key0;
 timestamps_td = combinedDataTable.DerivedTime;
 fs_td = timeDomainSettings.TDsettings{1,1}(1).sampleRate; %500;
-interval = 100; %fftSettings.fftConfig(1,1).interval; %100;
+interval = fftSettings.fftConfig(1,1).interval; %100;
 L = fftSettings.fftConfig(1,1).size; %256;
 amp_gain = metaData.ampGains.Amp1;
 hann_win = hannWindow(L, '100% Hann');
@@ -125,4 +125,46 @@ for i=1:length(F)
 end
 % close the writer object
 close(writerObj);
+
+
+
+%% New updated TD to PB code testing
+
+% first just do it for the single-bin PB1 and the first bit-shift block
+data_td_mv = combinedDataTable.TD_key0;
+time_td = combinedDataTable.DerivedTime;
+fs_td = timeDomainSettings.TDsettings{1,1}(1).sampleRate; %500;
+interval = fftSettings.fftConfig(1,1).interval; %100;
+L = fftSettings.fftConfig(1,1).size; %256;
+amp_gain = metaData.ampGains.Amp1;
+hann_win = hannWindow(L, fftSettings.fftConfig.windowLoad);
+bit_shift = str2double(fftSettings.fftConfig.bandFormationConfig(6)); %7;
+
+% Assign the power band
+center_freqs = (0:(L/2-1)) * fs_td/L;
+pb1_band_idx = powerSettings.powerBands.indices_BandStart_BandStop(1,:);
+band_edges_hz = center_freqs(pb1_band_idx);
+
+% TD to FFT
+data_td_rcs = transformMVtoRCS(data_td_mv, amp_gain);
+[data_fft, time_fft] = rcs_td_to_fft(data_td_rcs, time_td, fs_td, L, ...
+                                     interval, hann_win);
+% FFT to PB
+pb1_est = rcs_fft_to_pb(data_fft, fs_td, L, bit_shift, band_edges_hz);
+
+% Plot results to compare computed and measured PB1
+figure
+zero_time = pb_time(1);
+
+yyaxis left
+plot((pb_time - zero_time)/1000, pb1)
+% ylim([0,3.5e5])
+ylabel('Measured PB output [RCS units]')
+yyaxis right
+plot((time_fft - zero_time)/1000, pb1_est)
+% ylim([0,3.5e5])
+ylabel('Computed PB from TD [RCS units]')
+xlabel('Time [sec]')
+title({['Power band 1 bin indices [',num2str(pb1_band_idx),']'], ...
+       ['center frequencies [',num2str(band_edges_hz),'] Hz']})
 
